@@ -20,7 +20,7 @@ public class Main {
 
         // Use ANTLR to create a lexer and parser
         CharStream input = CharStreams.fromString(sb.toString());
-        Lexer lexer = new Lexer(input);
+        ProgramaLexer lexer = new ProgramaLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ProgramaParser parser = new ProgramaParser(tokens);
 
