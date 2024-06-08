@@ -8,7 +8,7 @@ import javax.swing.filechooser.FileSystemView;
 public class Main {
     public static void main(String[] args) throws IOException {
         // Alterar filepath se for testar outro código
-        String filePath = "C:/Programação/Metodos/Compilador/CodigoProfessor.txt";
+        String filePath = "C:/programacao/compilador/Compilador/teste.txt";
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         StringBuilder sb = new StringBuilder();
         String linha;
@@ -20,7 +20,7 @@ public class Main {
 
         // Use ANTLR to create a lexer and parser
         CharStream input = CharStreams.fromString(sb.toString());
-        ProgramaLexer lexer = new ProgramaLexer(input);
+        Lexer lexer = new Lexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         ProgramaParser parser = new ProgramaParser(tokens);
 
