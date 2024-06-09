@@ -126,7 +126,7 @@ primaria          : ID
                   | TEXTO
                   | '(' expressao ')';
 
-// Tokens
+// Regras léxicas
 ID                : [a-zA-Z_][a-zA-Z_0-9]*;
 NUM_INT           : [0-9]+;
 NUM_DEC           : [0-9]+ '.' [0-9]* | '.' [0-9]+;

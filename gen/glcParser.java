@@ -1,5 +1,4 @@
-// Generated from C:/programacao/compilador/Compilador/src/antlr4/glc.g4 by ANTLR 4.13.1
-package antlr4;
+// Generated from C:/programacao/compilador/Compilador/src/glc.g4 by ANTLR 4.13.1
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;

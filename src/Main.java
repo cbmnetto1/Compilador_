@@ -1,3 +1,5 @@
+import antlr.glcLexer;
+import antlr.glcParser;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.*;
@@ -20,9 +22,9 @@ public class Main {
 
         // Use ANTLR to create a lexer and parser
         CharStream input = CharStreams.fromString(sb.toString());
-        ProgramaLexer lexer = new ProgramaLexer(input);
+        glcLexer lexer = new glcLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ProgramaParser parser = new ProgramaParser(tokens);
+        glcParser parser = new glcParser(tokens);
 
         // Parse the input
         ParseTree tree = parser.programa();
