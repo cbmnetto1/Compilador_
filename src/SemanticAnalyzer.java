@@ -15,8 +15,16 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         operatorTypeRules.put("-intint", "int");
         operatorTypeRules.put("*intint", "int");
         operatorTypeRules.put("/intint", "int");
+        operatorTypeRules.put("%intint", "int");
         operatorTypeRules.put("&&booleanboolean", "boolean");
         operatorTypeRules.put("||booleanboolean", "boolean");
+        operatorTypeRules.put("==intint", "boolean");
+        operatorTypeRules.put("!=intint", "boolean");
+        operatorTypeRules.put("<=intint", "boolean");
+        operatorTypeRules.put(">=intint", "boolean");
+        operatorTypeRules.put("<intint", "boolean");
+        operatorTypeRules.put(">intint", "boolean");
+        // Adicione outras regras conforme necessário
     }
 
     @Override
@@ -43,7 +51,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         symbolTable.pushScope();
         visit(ctx.parametros());
         String blockReturnType = visit(ctx.bloco());
-        if (!returnType.equals(blockReturnType)) {
+        if (blockReturnType != null && !returnType.equals(blockReturnType)) {
             throw new RuntimeException("Type mismatch: function " + name + " returns " + blockReturnType + " instead of " + returnType);
         }
         symbolTable.popScope();
@@ -56,11 +64,6 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         String name = ctx.ID().getText();
         symbolTable.declare(new SymbolTable.Symbol(name, type));
         return null;
-    }
-
-    @Override
-    public String visitExpressao(glcParser.ExpressaoContext ctx) {
-        return visitChildren(ctx);
     }
 
     @Override
@@ -78,41 +81,46 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     }
 
     @Override
-    public String visitExpressaoAritmetica(glcParser.ExpressaoAritmeticaContext ctx) {
-        String leftType = visit(ctx.expressaoAritmetica());
-        String rightType = visit(ctx.expressaoMultiplicativa());
-        String operator = ctx.op.getText();
-        String resultType = operatorTypeRules.get(operator + leftType + rightType);
-        if (resultType == null) {
-            throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to types " + leftType + " and " + rightType);
+    public String visitExpressao(glcParser.ExpressaoContext ctx) {
+        if (ctx.atribuicao() != null) {
+            return visit(ctx.atribuicao());
         }
-        return resultType;
+        return visit(ctx.expressaoLogica());
     }
 
     @Override
-    public String visitExpressaoLogica(glcParser.ExpressaoLogicaContext ctx) {
-        String leftType = visit(ctx.expressaoLogica());
-        String rightType = visit(ctx.expressaoRelacional());
-        String operator = ctx.op.getText();
-        String resultType = operatorTypeRules.get(operator + leftType + rightType);
-        if (resultType == null) {
-            throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to types " + leftType + " and " + rightType);
+    public String visitExpressaoPostfix(glcParser.ExpressaoPostfixContext ctx) {
+        String type = visit(ctx.primaria());
+        if (ctx.argumentos() != null) {
+            visit(ctx.argumentos());
+            // Verifique tipos de função aqui se necessário
         }
-        return resultType;
+        return type;
     }
 
     @Override
-    public String visitBloco(glcParser.BlocoContext ctx) {
-        symbolTable.pushScope();
-        String returnType = null;
-        for (glcParser.DeclaracaoContext declCtx : ctx.declaracao()) {
-            String type = visit(declCtx);
-            if (declCtx instanceof glcParser.ExpressaoContext) {
-                returnType = type;
+    public String visitPrimaria(glcParser.PrimariaContext ctx) {
+        if (ctx.ID() != null) {
+            String varName = ctx.ID().getText();
+            SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
+            if (varSymbol == null) {
+                throw new RuntimeException("Undeclared variable: " + varName);
             }
+            return varSymbol.type;
         }
-        symbolTable.popScope();
-        return returnType;
+        if (ctx.NUM_INT() != null) {
+            return "int";
+        }
+        if (ctx.NUM_DEC() != null) {
+            return "double";
+        }
+        if (ctx.TEXTO() != null) {
+            return "char";
+        }
+        if (ctx.expressao() != null) {
+            return visit(ctx.expressao());
+        }
+        return null;
     }
 
     @Override
