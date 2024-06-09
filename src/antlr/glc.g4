@@ -134,3 +134,12 @@ TEXTO             : '"' (~["\\] | '\\' .)* '"';
 WS                : [ \t\r\n]+ -> skip;
 COMMENT           : '//' ~[\r\n]* -> skip;
 MULTILINE_COMMENT : '/*' .*? '*/' -> skip;
+KEYWORD           : 'int' | 'float' | 'double' | 'char' | 'boolean' | 'void'
+                  | 'if' | 'else' | 'for' | 'while' | 'switch' | 'case'
+                  | 'default' | 'break' | 'continue' | 'return'
+                  | 'main' | 'scanf' | 'println';
+OPERADOR          : '==' | '!=' | '<=' | '>=' | '&&' | '||'
+                  | '+' | '-' | '*' | '/' | '%' | '!'
+                  | '<' | '>' | '=' | '+=' | '-=' | '*=' | '/=' | '%='
+                  | '&&=' | '||=';
+SIMBOLO           : '[' | ']' | '{' | '}' | '(' | ')' | ',' | ';';
