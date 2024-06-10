@@ -5,8 +5,6 @@ import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.tree.*;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Main {
     public static void main(String[] args) throws IOException {
@@ -50,7 +48,7 @@ public class Main {
         // Análise semântica
         ParseTreeWalker walker = new ParseTreeWalker();
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-        walker.walk(semanticAnalyzer, tree);
+        walker.walk((ParseTreeListener) semanticAnalyzer, tree);
         System.out.println("Análise semântica concluída com sucesso.");
     }
 }

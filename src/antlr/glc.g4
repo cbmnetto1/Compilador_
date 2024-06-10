@@ -6,6 +6,7 @@ programa         : declaracao*;
 declaracao       : declaracaoVariavel
                  | declaracaoFuncao
                  | declaracaoEstrutura
+                 | estruturaControle
                  | comentario;
 
 // Declaração de Variável
@@ -19,7 +20,7 @@ tipo              : 'int'
                   | 'boolean';
 
 // Declaração de Função
-declaracaoFuncao : tipo ID '(' parametros ')' bloco;
+declaracaoFuncao : tipo ID '(' parametros? ')' bloco;
 
 // Parâmetros de Função
 parametros       : parametro
@@ -131,6 +132,8 @@ ID                : [a-zA-Z_][a-zA-Z_0-9]*;
 NUM_INT           : [0-9]+;
 NUM_DEC           : [0-9]+ '.' [0-9]* | '.' [0-9]+;
 TEXTO             : '"' (~["\\] | '\\' .)* '"';
+CARACTERE         : '\'' . '\'';
+BOOLEANO          : 'true' | 'false';
 WS                : [ \t\r\n]+ -> skip;
 COMMENT           : '//' ~[\r\n]* -> skip;
 MULTILINE_COMMENT : '/*' .*? '*/' -> skip;
