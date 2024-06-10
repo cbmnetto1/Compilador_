@@ -73,6 +73,30 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         return varSymbol.type;
     }
 
+    // Implementação de tipos básicos (inteiros, booleanos, strings)
+    @Override
+    public String visitPrimaria(glcParser.PrimariaContext ctx) {
+        if (ctx.NUM_INT() != null) {
+            return "int";
+        }
+        //não consegue pegar booleano
+        /* if (ctx.BOOLEANO() != null) {
+            return "boolean";
+        } */
+        if (ctx.TEXTO() != null) {
+            return "string";
+        }
+        if (ctx.ID() != null) {
+            String varName = ctx.ID().getText();
+            SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
+            if (varSymbol == null) {
+                throw new RuntimeException("Undeclared variable: " + varName);
+            }
+            return varSymbol.type;
+        }
+        return visit(ctx.expressao());
+    }
+
     //visita expressoes gerais e programas
     @Override
     public String visitPrograma(glcParser.ProgramaContext ctx) {
