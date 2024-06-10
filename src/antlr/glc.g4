@@ -1,7 +1,7 @@
 grammar glc;
 
 // Regras principais
-programa         : declaracao*;
+programa         : declaracao* EOF;
 
 declaracao       : declaracaoVariavel
                  | declaracaoFuncao
@@ -23,8 +23,7 @@ tipo              : 'int'
 declaracaoFuncao : tipo ID '(' parametros? ')' bloco;
 
 // Parâmetros de Função
-parametros       : parametro
-                 | parametro ',' parametros;
+parametros       : parametro (',' parametro)*;
 
 parametro        : tipo ID
                  | tipo ID '[]'
@@ -48,21 +47,13 @@ atribuicao       : ID '=' expressao
                  | ID '/=' expressao
                  | ID '%=' expressao
                  | ID '&&=' expressao
-                 | ID '||=' expressao
-                 | ID '=' ID
-                 | ID '+=' ID
-                 | ID '-=' ID
-                 | ID '*=' ID
-                 | ID '/=' ID
-                 | ID '%=' ID
-                 | ID '&&=' ID
-                 | ID '||=' ID;
+                 | ID '||=' expressao;
 
 // Estruturas de Controle
 estruturaControle : 'if' '(' expressao ')' bloco
                   | 'if' '(' expressao ')' bloco 'else' bloco
                   | 'while' '(' expressao ')' bloco
-                  | 'for' '(' expressao ';' expressao ';' expressao ')' bloco
+                  | 'for' '(' declaracaoVariavel expressao ';' expressao ')' bloco
                   | 'switch' '(' expressao ')' caseLista
                   | 'break' ';'
                   | 'continue' ';'
@@ -124,6 +115,8 @@ argumentos        : expressaoLista
 primaria          : ID
                   | NUM_INT
                   | NUM_DEC
+                  | CARACTERE
+                  | BOOLEANO
                   | TEXTO
                   | '(' expressao ')';
 
@@ -131,9 +124,9 @@ primaria          : ID
 ID                : [a-zA-Z_][a-zA-Z_0-9]*;
 NUM_INT           : [0-9]+;
 NUM_DEC           : [0-9]+ '.' [0-9]* | '.' [0-9]+;
-TEXTO             : '"' (~["\\] | '\\' .)* '"';
 CARACTERE         : '\'' . '\'';
 BOOLEANO          : 'true' | 'false';
+TEXTO             : '"' (~["\\] | '\\' .)* '"';
 WS                : [ \t\r\n]+ -> skip;
 COMMENT           : '//' ~[\r\n]* -> skip;
 MULTILINE_COMMENT : '/*' .*? '*/' -> skip;

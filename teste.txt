@@ -1,12 +1,5 @@
-int main() {
+int test(float teste) {
     int a = 5;
     float b = 3.14;
-    char c = 'x';
-    boolean flag = true;
-    
-    if (a > 0) {
-        a += 10;
-    } else {
-        a -= 10;
-    }
+    double d = 2.71828;
 }
