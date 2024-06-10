@@ -76,6 +76,9 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     // Implementação de tipos básicos (inteiros, booleanos, strings)
     @Override
     public String visitPrimaria(glcParser.PrimariaContext ctx) {
+        if (ctx == null) {
+            throw new NullPointerException("PrimariaContext é null");
+        }
         if (ctx.NUM_INT() != null) {
             return "int";
         }
@@ -94,7 +97,46 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
             }
             return varSymbol.type;
         }
-        return visit(ctx.expressao());
+        if (ctx.expressao() != null) {
+            return visit(ctx.expressao());
+        } else {
+            throw new RuntimeException("Expressão nula encontrada em PrimariaContext");
+        }
+    }
+
+    // Verificação de tipos para operações lógicas
+    @Override
+    public String visitExpressaoLogica(glcParser.ExpressaoLogicaContext ctx) {
+        if (ctx.getChildCount() == 3) {  // expressaoLogica operador expressaoLogica
+            // O índice 0 é o filho esquerdo, 1 é o operador e 2 é o filho direito
+            String leftType = visit(ctx.getChild(0));
+            String rightType = visit(ctx.getChild(2));
+            String operator = ctx.getChild(1).getText();
+            String key = operator + leftType + rightType;
+            if (!operatorTypeRules.containsKey(key)) {
+                throw new RuntimeException("Incompatibilidade: Não consegue aplicar operador " + operator + " para " + leftType + " e " + rightType);
+            }
+            return operatorTypeRules.get(key);
+        }
+        return visit(ctx.expressaoRelacional());
+    }
+
+
+    // Verificação de tipos para operações aritméticas
+    @Override
+    public String visitExpressaoAritmetica(glcParser.ExpressaoAritmeticaContext ctx) {
+        if (ctx.getChildCount() == 3) {  // expressaoAritmetica operador expressaoAritmetica
+            // O índice 0 é o filho esquerdo, 1 é o operador e 2 é o filho direito
+            String leftType = visit(ctx.getChild(0));
+            String rightType = visit(ctx.getChild(2));
+            String operator = ctx.getChild(1).getText(); // Acessa o operador diretamente do parse tree
+            String key = operator + leftType + rightType;
+            if (!operatorTypeRules.containsKey(key)) {
+                throw new RuntimeException("Incompatibilidade: Não consegue aplicar operador " + operator + " para " + leftType + " e " + rightType);
+            }
+            return operatorTypeRules.get(key);
+        }
+        return visit(ctx.getChild(0));
     }
 
     //visita expressoes gerais e programas
