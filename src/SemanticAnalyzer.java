@@ -1,11 +1,14 @@
 import antlr.glcBaseVisitor;
 import antlr.glcParser;
-import org.antlr.v4.runtime.tree.ParseTree;
 import java.util.HashMap;
 import java.util.Map;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+
 
 public class SemanticAnalyzer extends glcBaseVisitor<String> {
     private SymbolTable symbolTable = new SymbolTable();
+    //tabela de símbolos usadada para rastrear variaveis e seus tipos
     private Map<String, String> operatorTypeRules;
 
     public SemanticAnalyzer() {
@@ -24,7 +27,9 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         operatorTypeRules.put(">=intint", "boolean");
         operatorTypeRules.put("<intint", "boolean");
         operatorTypeRules.put(">intint", "boolean");
-        // Adicione outras regras conforme necessário
+        operatorTypeRules.put("+stringstring", "string");
+        operatorTypeRules.put("+intstring", "string");
+        operatorTypeRules.put("+stringint", "string");
     }
 
     @Override
@@ -35,8 +40,8 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
 
         if (ctx.expressao() != null) {
             String exprType = visit(ctx.expressao());
-            if (!type.equals(exprType)) {
-                throw new RuntimeException("Type mismatch: cannot assign " + exprType + " to " + type);
+            if (!isAssignable(type, exprType)) {
+                throw new RuntimeException("Incompatibilidade: Não pode atribuir " + exprType + " para " + type);
             }
         }
         return null;
@@ -52,7 +57,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         visit(ctx.parametros());
         String blockReturnType = visit(ctx.bloco());
         if (blockReturnType != null && !returnType.equals(blockReturnType)) {
-            throw new RuntimeException("Type mismatch: function " + name + " returns " + blockReturnType + " instead of " + returnType);
+            throw new RuntimeException("Incompatibilidade: Função " + name + " retorna " + blockReturnType + " ao invés de " + returnType);
         }
         symbolTable.popScope();
         return null;
@@ -71,11 +76,11 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         String varName = ctx.ID(0).getText();
         SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
         if (varSymbol == null) {
-            throw new RuntimeException("Undeclared variable: " + varName);
+            throw new RuntimeException("Variável não declarada: " + varName);
         }
         String exprType = visit(ctx.expressao());
-        if (!varSymbol.type.equals(exprType)) {
-            throw new RuntimeException("Type mismatch: cannot assign " + exprType + " to " + varSymbol.type);
+        if (!isAssignable(varSymbol.type, exprType)) {
+            throw new RuntimeException("Incompatibilidade: Não pode atribuir " + exprType + " para " + varSymbol.type);
         }
         return varSymbol.type;
     }
@@ -89,17 +94,67 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     }
 
     @Override
-    public String visitExpressaoPostfix(glcParser.ExpressaoPostfixContext ctx) {
-        String type = visit(ctx.primaria());
-        if (ctx.argumentos() != null) {
-            visit(ctx.argumentos());
-            // Verifique tipos de função aqui se necessário
+    public String visitExpressaoLogica(glcParser.ExpressaoLogicaContext ctx) {
+        if (ctx.expressaoLogica().size() == 2) {
+            String leftType = visit(ctx.expressaoLogica(0));
+            String rightType = visit(ctx.expressaoLogica(1));
+            String operator = ctx.getChild(1).getText();
+            String key = operator + leftType + rightType;
+            if (!operatorTypeRules.containsKey(key)) {
+                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
+            }
+            return operatorTypeRules.get(key);
         }
-        return type;
+        return visit(ctx.expressaoRelacional());
+    }
+
+    @Override //ver dps
+    public String visitExpressaoRelacional(glcParser.ExpressaoRelacionalContext ctx) {
+        if (ctx.expressaoAritmetica().size() == 2) {
+            String leftType = visit(ctx.expressaoAritmetica(0));
+            String rightType = visit(ctx.expressaoAritmetica(1));
+            String operator = ctx.getChild(1).getText(); // Acessa o operador diretamente do parse tree
+            String key = operator + leftType + rightType;
+            if (!operatorTypeRules.containsKey(key)) {
+                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
+            }
+            return operatorTypeRules.get(key);
+        }
+        return visit(ctx.expressaoAritmetica(0));
+    }
+
+
+    @Override
+    public String visitExpressaoAritmetica(glcParser.ExpressaoAritmeticaContext ctx) {
+        if (ctx.expressaoAritmetica().size() == 2) {
+            String leftType = visit(ctx.expressaoAritmetica(0));
+            String rightType = visit(ctx.expressaoAritmetica(1));
+            String operator = ctx.getChild(1).getText();
+            String key = operator + leftType + rightType;
+            if (!operatorTypeRules.containsKey(key)) {
+                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
+            }
+            return operatorTypeRules.get(key);
+        }
+        return visit(ctx.termo());
     }
 
     @Override
-    public String visitPrimaria(glcParser.PrimariaContext ctx) {
+    public String visitTermo(glcParser.TermoContext ctx) {
+        return visit(ctx.fator());
+    }
+
+    @Override
+    public String visitFator(glcParser.FatorContext ctx) {
+        if (ctx.NUM_INT() != null) {
+            return "int";
+        }
+        if (ctx.BOOLEANO() != null) {
+            return "boolean";
+        }
+        if (ctx.CADEIA() != null) {
+            return "string";
+        }
         if (ctx.ID() != null) {
             String varName = ctx.ID().getText();
             SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
@@ -108,24 +163,22 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
             }
             return varSymbol.type;
         }
-        if (ctx.NUM_INT() != null) {
-            return "int";
-        }
-        if (ctx.NUM_DEC() != null) {
-            return "double";
-        }
-        if (ctx.TEXTO() != null) {
-            return "char";
-        }
-        if (ctx.expressao() != null) {
-            return visit(ctx.expressao());
-        }
-        return null;
+        return visit(ctx.expressao());
     }
 
     @Override
     public String visitPrograma(glcParser.ProgramaContext ctx) {
         visitChildren(ctx);
         return null;
+    }
+
+    private boolean isAssignable(String targetType, String sourceType) {
+        if (targetType.equals(sourceType)) {
+            return true;
+        }
+        if (targetType.equals("float") && sourceType.equals("double")) {
+            return true;
+        }
+        return false;
     }
 }

@@ -42,13 +42,12 @@ public class Main {
             }
         });
 
-        // Parse the input
+        // Parse o input
         ParseTree tree = parser.programa();
 
         // Análise semântica
-        ParseTreeWalker walker = new ParseTreeWalker();
         SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-        walker.walk((ParseTreeListener) semanticAnalyzer, tree);
+        semanticAnalyzer.visit(tree);
         System.out.println("Análise semântica concluída com sucesso.");
     }
 }
