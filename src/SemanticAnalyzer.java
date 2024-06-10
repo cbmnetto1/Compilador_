@@ -27,26 +27,13 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         operatorTypeRules.put(">=intint", "boolean");
         operatorTypeRules.put("<intint", "boolean");
         operatorTypeRules.put(">intint", "boolean");
+        //sobrecarga de operadores
         operatorTypeRules.put("+stringstring", "string");
         operatorTypeRules.put("+intstring", "string");
         operatorTypeRules.put("+stringint", "string");
     }
 
-    @Override
-    public String visitDeclaracaoVariavel(glcParser.DeclaracaoVariavelContext ctx) {
-        String type = ctx.tipo().getText();
-        String name = ctx.ID().getText();
-        symbolTable.declare(new SymbolTable.Symbol(name, type));
-
-        if (ctx.expressao() != null) {
-            String exprType = visit(ctx.expressao());
-            if (!isAssignable(type, exprType)) {
-                throw new RuntimeException("Incompatibilidade: Não pode atribuir " + exprType + " para " + type);
-            }
-        }
-        return null;
-    }
-
+    // Tipagem de funções e verificação de tipos de parâmetros e retornos
     @Override
     public String visitDeclaracaoFuncao(glcParser.DeclaracaoFuncaoContext ctx) {
         String returnType = ctx.tipo().getText();
@@ -71,6 +58,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         return null;
     }
 
+    // Verificação de tipos para atribuição
     @Override
     public String visitAtribuicao(glcParser.AtribuicaoContext ctx) {
         String varName = ctx.ID(0).getText();
@@ -85,6 +73,13 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         return varSymbol.type;
     }
 
+    //visita expressoes gerais e programas
+    @Override
+    public String visitPrograma(glcParser.ProgramaContext ctx) {
+        visitChildren(ctx);
+        return null;
+    }
+
     @Override
     public String visitExpressao(glcParser.ExpressaoContext ctx) {
         if (ctx.atribuicao() != null) {
@@ -93,85 +88,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         return visit(ctx.expressaoLogica());
     }
 
-    @Override
-    public String visitExpressaoLogica(glcParser.ExpressaoLogicaContext ctx) {
-        if (ctx.expressaoLogica().size() == 2) {
-            String leftType = visit(ctx.expressaoLogica(0));
-            String rightType = visit(ctx.expressaoLogica(1));
-            String operator = ctx.getChild(1).getText();
-            String key = operator + leftType + rightType;
-            if (!operatorTypeRules.containsKey(key)) {
-                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
-            }
-            return operatorTypeRules.get(key);
-        }
-        return visit(ctx.expressaoRelacional());
-    }
-
-    @Override //ver dps
-    public String visitExpressaoRelacional(glcParser.ExpressaoRelacionalContext ctx) {
-        if (ctx.expressaoAritmetica().size() == 2) {
-            String leftType = visit(ctx.expressaoAritmetica(0));
-            String rightType = visit(ctx.expressaoAritmetica(1));
-            String operator = ctx.getChild(1).getText(); // Acessa o operador diretamente do parse tree
-            String key = operator + leftType + rightType;
-            if (!operatorTypeRules.containsKey(key)) {
-                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
-            }
-            return operatorTypeRules.get(key);
-        }
-        return visit(ctx.expressaoAritmetica(0));
-    }
-
-
-    @Override
-    public String visitExpressaoAritmetica(glcParser.ExpressaoAritmeticaContext ctx) {
-        if (ctx.expressaoAritmetica().size() == 2) {
-            String leftType = visit(ctx.expressaoAritmetica(0));
-            String rightType = visit(ctx.expressaoAritmetica(1));
-            String operator = ctx.getChild(1).getText();
-            String key = operator + leftType + rightType;
-            if (!operatorTypeRules.containsKey(key)) {
-                throw new RuntimeException("Type mismatch: cannot apply operator " + operator + " to " + leftType + " and " + rightType);
-            }
-            return operatorTypeRules.get(key);
-        }
-        return visit(ctx.termo());
-    }
-
-    @Override
-    public String visitTermo(glcParser.TermoContext ctx) {
-        return visit(ctx.fator());
-    }
-
-    @Override
-    public String visitFator(glcParser.FatorContext ctx) {
-        if (ctx.NUM_INT() != null) {
-            return "int";
-        }
-        if (ctx.BOOLEANO() != null) {
-            return "boolean";
-        }
-        if (ctx.CADEIA() != null) {
-            return "string";
-        }
-        if (ctx.ID() != null) {
-            String varName = ctx.ID().getText();
-            SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
-            if (varSymbol == null) {
-                throw new RuntimeException("Undeclared variable: " + varName);
-            }
-            return varSymbol.type;
-        }
-        return visit(ctx.expressao());
-    }
-
-    @Override
-    public String visitPrograma(glcParser.ProgramaContext ctx) {
-        visitChildren(ctx);
-        return null;
-    }
-
+    // Inferência de tipos e sobrecarga de operadores
     private boolean isAssignable(String targetType, String sourceType) {
         if (targetType.equals(sourceType)) {
             return true;

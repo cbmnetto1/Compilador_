@@ -30,7 +30,7 @@ parametro        : tipo ID
                  | tipo '...' ID;
 
 // Bloco
-bloco            : '{' declaracao* '}';
+bloco : '{' (declaracaoVariavel | estruturaControle | expressao ';')* '}';
 
 // Comentário
 comentario       : '//' ~('\r' | '\n')* ('\r'? '\n')?
