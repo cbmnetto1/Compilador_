@@ -50,6 +50,9 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     public String visitParametro(glcParser.ParametroContext ctx) {
         String type = ctx.tipo().getText();
         String name = ctx.ID().getText();
+        if (symbolTable.lookup(name) != null) {
+            throw new RuntimeException("Erro semântico: Parâmetro '" + name + "' já declarado.");
+        }
         symbolTable.declare(new SymbolTable.Symbol(name, type));
         return null;
     }
@@ -58,14 +61,17 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     public String visitAtribuicao(glcParser.AtribuicaoContext ctx) {
         String varName = ctx.ID(0).getText();
         SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
-        if (varSymbol == null) {
-            throw new RuntimeException("Variável não declarada: " + varName);
-        }
         String exprType = visit(ctx.expressao());
-        if (!isAssignable(varSymbol.type, exprType)) {
-            throw new RuntimeException("Incompatibilidade: Não pode atribuir " + exprType + " para " + varSymbol.type);
+
+        if (varSymbol == null) {
+            // Se a variável não está declarada, inferimos seu tipo baseado na expressão
+            symbolTable.declare(new SymbolTable.Symbol(varName, exprType));
+        } else {
+            if (!isAssignable(varSymbol.type, exprType)) {
+                throw new RuntimeException("Incompatibilidade: Não pode atribuir " + exprType + " para " + varSymbol.type);
+            }
         }
-        return varSymbol.type;
+        return exprType;
     }
 
     @Override
@@ -73,12 +79,15 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         if (ctx.NUM_INT() != null) {
             return "int";
         }
+        if (ctx.NUM_DEC() != null) {
+            return "double";
+        }
         /* booleano não consegue rodar
         if (ctx.BOOLEANO() != null) {
             return "boolean";
         } */
         if (ctx.TEXTO() != null) {
-            return "string";
+            return "String";
         }
         if (ctx.ID() != null) {
             String varName = ctx.ID().getText();
@@ -107,6 +116,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
             }
             return operatorTypeRules.get(key);
         }
+        // Se não tiver três filhos é uma expressão relacional simples
         return visit(ctx.expressaoRelacional());
     }
 

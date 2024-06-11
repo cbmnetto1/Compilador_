@@ -1,5 +1,0 @@
-int x;
-string y;
-x = 10;
-y = "hello";
-int z = x + y; // Erro semântico: Operação entre int e string

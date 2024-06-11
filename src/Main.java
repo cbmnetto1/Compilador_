@@ -9,7 +9,7 @@ import java.io.*;
 public class Main {
     public static void main(String[] args) throws IOException {
         // Alterar filepath se for testar outro código
-        String filePath = "C:/programacao/compilador/Compilador/novo.txt";
+        String filePath = "C:/programacao/compilador/Compilador/codigoteste.txt";
         BufferedReader reader = new BufferedReader(new FileReader(filePath));
         StringBuilder sb = new StringBuilder();
         String linha;
