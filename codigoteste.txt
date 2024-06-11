@@ -1,4 +1,0 @@
-int main() {
-float y = 5;
-double x = y + 5; 
-}

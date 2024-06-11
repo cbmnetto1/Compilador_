@@ -7,7 +7,7 @@ public class SymbolTable {
 
     public SymbolTable() {
         scopes = new Stack<>();
-        pushScope(); // Global scope
+        pushScope(); // escopo global
     }
 
     public void pushScope() {
@@ -33,7 +33,7 @@ public class SymbolTable {
                 return scope.get(name);
             }
         }
-        return null; // Not found
+        return null;
     }
 
     public static class Symbol {

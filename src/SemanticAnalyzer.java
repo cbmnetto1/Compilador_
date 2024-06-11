@@ -75,6 +75,21 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
     }
 
     @Override
+    public String visitDeclaracaoVariavel(glcParser.DeclaracaoVariavelContext ctx) {
+        String type = ctx.tipo().getText();
+        String name = ctx.ID().getText();
+        if (symbolTable.lookup(name) != null) {
+            throw new RuntimeException("Erro semântico: Variável '" + name + "' já declarada.");
+        }
+        String valueType = visit(ctx.expressao());
+        if (!isAssignable(type, valueType)) {
+            throw new RuntimeException("Incompatibilidade: Não pode atribuir " + valueType + " para " + type);
+        }
+        symbolTable.declare(new SymbolTable.Symbol(name, type));  // Corrigido aqui
+        return type;
+    }
+
+    @Override
     public String visitPrimaria(glcParser.PrimariaContext ctx) {
         if (ctx.NUM_INT() != null) {
             return "int";
@@ -93,7 +108,7 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
             String varName = ctx.ID().getText();
             SymbolTable.Symbol varSymbol = symbolTable.lookup(varName);
             if (varSymbol == null) {
-                throw new RuntimeException("Undeclared variable: " + varName);
+                throw new RuntimeException("Variavel não declarada: " + varName);
             }
             return varSymbol.type;
         }
@@ -153,7 +168,10 @@ public class SemanticAnalyzer extends glcBaseVisitor<String> {
         if (targetType.equals(sourceType)) {
             return true;
         }
-        if (targetType.equals("float") && sourceType.equals("double")) {
+        if (targetType.equals("double") && (sourceType.equals("float") || sourceType.equals("int"))) {
+            return true;
+        }
+        if (targetType.equals("float") && sourceType.equals("int")) {
             return true;
         }
         return false;

@@ -1,0 +1,13 @@
+int funcao(double teste) {
+    int a = 10;
+    float b = 5.5;
+    double c = b + 5;  // 'b' é float, 5 é int, resultado é float, compatível com double
+    String d = "Hello";
+    String e = d + " World";  // Concatenação de strings
+
+    if (a < 20 && b > 2.0) {  // Comparações válidas e operadores lógicos
+        int f = a + 5;  // Operação aritmética válida
+    }
+    
+    return 0;
+}

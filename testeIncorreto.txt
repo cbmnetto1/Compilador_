@@ -1,0 +1,14 @@
+int main() {
+    int x = 10;
+    float y = 5;
+    double z = x + y;  // Compatível, 'x' é int, 'y' é float, resultado é float, compatível com double
+
+    boolean b = true;  // 'boolean' não foi declarado como tipo suportado
+    b = x > y;  // Compatível, 'x' e 'y' são numéricos
+
+    int c = y + "10";  // Erro: Não pode adicionar float e string
+    int d = true + 1;  // Erro: Não pode adicionar boolean e int
+    String s = 10 - 5;  // Erro: Resultado da subtração é int, não pode ser atribuído a String
+
+    return 0;
+}
